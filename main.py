@@ -68,9 +68,7 @@ class ArvoreAVL:
 
             temp = self.obter_no_minimo(no.direita)
             no.id = temp.id
-            no.numero_conta = temp.numero_conta
-            no.saldo = temp.saldo
-            no.nome = temp.nome
+            no.data = temp.data
             no.direita = self.remover(no.direita, temp.id)
 
 
@@ -94,6 +92,16 @@ class ArvoreAVL:
 
         return no
 
+    def mostrar_resultado(self, no, fila):
+        if fila.head is not None and no is not None:
+            if fila.head.escolha == 0:
+                fila.remover_escolha()
+                return self.mostrar_resultado(no.esquerda,fila)
+            else:
+                fila.remover_escolha()
+                return self.mostrar_resultado(no.direita,fila)
+
+        return no
 
     def buscar(self, no, id):
         if not no or no.i == id:
@@ -157,8 +165,7 @@ class ListaDeCenas:
             "Cena2",
             "Cena3",
             "Cena4",
-            "Cena5",
-            "Cena6"
+            "Cena5"
         ]
 
         for id, desc in enumerate(cenarios, 1):
@@ -222,16 +229,25 @@ class FilaDeEscolhas:
     def remover_escolha(self):
         if self.head is not None:
             self.head = self.head.proximo
-            print("Escolha removida da fila!")
+            print("Escolha removida da fila!\n")
             return
         
         print("A fila não existe")
 
-    def mostrar_cenas(self):
+    def mostrar_escolhas(self):
         escolha = self.head
         while escolha:
             print(escolha.escolha)
             escolha = escolha.proximo
+
+    def limpar(self):
+        self.head = None
+
+    def copiar(self):
+        return self.head
+
+    def colar(self, no):
+        self.head = no
 
 class PilhaDeEscolhas:
     def __init__(self):
@@ -257,18 +273,60 @@ class PilhaDeEscolhas:
         
         return None
 
-    def mostrar_cenas(self):
+    def mostrar_escolhas(self):
         escolha = self.head
         while escolha:
             print(escolha.escolha)
             escolha = escolha.proximo
 
+        
+
+    def limpar(self):
+        print("limpo")
+        self.head = None
+
+    def copiar(self):
+        return self.head
+
+    def colar(self, no):
+        self.head = no
+
+def jogo(lista, pilha, fila, tree, root):
+    nivel = 1
+    while True:
+        cena_atual = lista.buscar(nivel)
+        if cena_atual is not None:
+            print(f"\n{cena_atual.descri}")
+                    
+            escolha = int(input("Qual a sua escolha:"))
+            if escolha == 0 or escolha == 1:
+                pilha.adicionar_escolha(escolha)
+                nivel = nivel + 1
+            else:
+                print("Número invalido")
+        else:
+            fila.colar(pilha.copiar())
+            fila.mostrar_escolhas()
+            resultado = tree.mostrar_resultado(root, fila)
+            print(resultado.data)
+            print("Fim do Jogo")
+            break
+
 def main():
     tree = ArvoreAVL()
     root = None
     for id in range(1,64):
-        data = f"Info {id}"
-        root = tree.inserir(root, id, data)
+        # para adicionar os finais, você precisa ver qual a raiz que vc pode colacar o final (elas tem altura 1 que é informada no console depois do dado) 
+        # e colocar o id nesse "switch".
+        if id == 1:
+            data = "Todo mundo morreu!"
+            root = tree.inserir(root, id, data)
+        elif id == 63:
+            data = "Todo mundo viveu!"
+            root = tree.inserir(root, id, data)
+        else:
+            data = f"Info {id}"
+            root = tree.inserir(root, id, data)
     
     tree.pre_order(root)
     lista = ListaDeCenas()
@@ -276,6 +334,9 @@ def main():
     pilha = PilhaDeEscolhas()
 
     while True:
+        fila.limpar()
+        pilha.limpar()
+
         print("Escolha uma opção abaixo\n")
         print("1.Jogar")
         print("2.mostrar cenas")
@@ -283,19 +344,16 @@ def main():
         try:
             escolha =  int(input("faça sua escolha:"))
             if escolha == 1:
-                nivel = 1
-                while True:
-                    cena_atual = lista.buscar(nivel)
-                    
+                jogo(lista, pilha, fila, tree, root)
                     
             elif escolha == 2:
                 lista.mostrar_cenas()
             elif escolha == 3:
-                print("Saindo do jogo!")
+                print("\nSaindo do jogo!\n")
                 break
 
-        except KeyError:
-            print("entrada invalida")
+        except ValueError:
+            print("\nEntrada invalida\n")
 
 if __name__ == '__main__':
     main()
